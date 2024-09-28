@@ -74,6 +74,10 @@ The **Vitals Monitoring and Prediction System** is a Python-based solution that 
 -   **Libraries and Frameworks**:
     -   **Data Handling**: `pandas`
     -   **Machine Learning**: `scikit-learn` (Logistic Regression), `joblib`
+ ##Outputs
+![b40e3e15-da2e-45c6-abf9-ef73fb209f30](https://github.com/user-attachments/assets/ff2fbd25-dbc8-439f-9bce-d23b12cf4732)
+
+
     -   **Interactive UI**: `ipywidgets`, `IPython.display`
     -   **File Operations**: `os`
 -   **Environment**: Jupyter Notebook for interactive execution and documentation
