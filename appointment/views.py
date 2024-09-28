@@ -6,7 +6,23 @@ import google.generativeai as genai
 import os
 import PIL.Image
 import base64
+from .forms import RegistrationForm
+from django.shortcuts import render, redirect
+from . import forms
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.conf import settings
+import os
+import requests
+from django.core.files.storage import FileSystemStorage
+# views.py
+import os
+import google.generativeai as genai
+from django.shortcuts import render
+from django.http import JsonResponse
 
+history = []
 # Configure Gemini API
 google_api_key = 'AIzaSyDPUUCaXw0iFJdjqbsVnsAcTJJpmBEF6t0'
 genai.configure(api_key=google_api_key)
@@ -61,7 +77,17 @@ model = genai.GenerativeModel(
     system_instruction=system_prompt
 )
 
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('appointment/register.html')  # Redirect to home or another page after registration
+    else:
+        form = RegistrationForm()
+    return render(request, 'appointment/register.html', {'form': form})
 # View function for analyzing images and/or text
+
 def analyze_image(request):
     context = {}
 
@@ -98,10 +124,18 @@ def analyze_image(request):
             os.remove(image_path)
         elif user_input:
             # If only text is provided, process the text input
-            prompt_parts = [user_input, system_prompt]
-            response = model.generate_content(prompt_parts)
-            if response:
-                context['analysis'] = response.text
+            chat_session = model.start_chat(history=history)
+            response = chat_session.send_message(user_input)
+            model_response = response.text
+
+            # Append user and bot messages to the history
+            history.append({"role": "user", "parts": [user_input]})
+            history.append({"role": "model", "parts": [model_response]})
+
+            # Return JSON response for the bot's reply
+            context['message'] = history
+            return JsonResponse({'bot_response': model_response, 'history': history})
+        
         else:
             # If neither image nor text is provided, show an error message
             context['error'] = "Please provide an image or text input for analysis."
