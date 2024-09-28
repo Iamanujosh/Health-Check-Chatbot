@@ -4,27 +4,30 @@ from django.http import JsonResponse
 from django.core.files.storage import default_storage
 import google.generativeai as genai
 import os
-import PIL.Image
 import base64
-from .forms import RegistrationForm
 from django.shortcuts import render, redirect
-from . import forms
-from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.conf import settings
 import os
 import requests
 from django.core.files.storage import FileSystemStorage
-# views.py
 import os
 import google.generativeai as genai
 from django.shortcuts import render
 from django.http import JsonResponse
+from .models import User
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from . import forms
+from .forms import RegisterForm
+from .models import UserProfile
 
 history = []
+# Example: Fetching user data from the database
+
 # Configure Gemini API
-google_api_key = 'AIzaSyDPUUCaXw0iFJdjqbsVnsAcTJJpmBEF6t0'
+google_api_key = 'AIzaSyAmb11uMRSOS9sAwFSqZbJaOqmFrDpsxTM'
 genai.configure(api_key=google_api_key)
 
 # Model configuration
@@ -43,13 +46,17 @@ safety_settings = [
 ]
 
 system_prompt = """
-   You are a domain expert in medical image analysis, tasked with examining both medical images and accompanying text descriptions for a renowned hospital. Your expertise will help in identifying or discovering any anomalies, diseases, conditions, or health issues that might be present in the image, as well as understanding and analyzing the textual information provided by the user.
+  
+   You are a domain expert in medical image analysis, tasked with examining both medical images and accompanying text descriptions for a renowned hospital.  Your expertise will help in identifying or discovering any anomalies, diseases, conditions, or health issues that might be present in the image, as well as understanding and analyzing the textual information provided by the user.
+
+
 
 Your key responsibilities:
-1. **Detailed Analysis**: Scrutinize and thoroughly examine the provided image, focusing on finding any abnormalities. Also, consider the user's text description (if provided) to assist in your analysis.
-2. **Analysis Report**: Document all findings from both the image and text input in a structured format.
-3. **Recommendations**: Based on the analysis of both the image and text, suggest any remedies, tests, or treatments as applicable.
-4. **Treatments**: If applicable, lay out detailed treatments that can help in faster recovery.
+1.**Greeting user1**: you have to greet user user1 first and asked her about her disease which is cancer and solve her queries and provide insights on images.
+2. **Detailed Analysis**: Scrutinize and thoroughly examine the provided image, focusing on finding any abnormalities. Also, consider the user's text description (if provided) to assist in your analysis.
+3. **Analysis Report**: Document all findings from both the image and text input in a structured format.
+4. **Recommendations**: Based on the analysis of both the image and text, suggest any remedies, tests, or treatments as applicable.
+5. **Treatments**: If applicable, lay out detailed treatments that can help in faster recovery.
 
 Important Notes to remember:
     1. Scope of response : Only respond if the image or input text pertains to 
@@ -76,18 +83,50 @@ model = genai.GenerativeModel(
     safety_settings=safety_settings,
     system_instruction=system_prompt
 )
+@login_required
+def profile(request):
+    # Access the logged-in user
+    profile = UserProfile.objects.get(user=request.user)
+    disease = profile.disease
+    return render(request, 'appointment/profile.html', {'user': profile,'disease':disease})
 
-def register(request):
+def register_view(request):
+
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('appointment/register.html')  # Redirect to home or another page after registration
-    else:
-        form = RegistrationForm()
-    return render(request, 'appointment/register.html', {'form': form})
-# View function for analyzing images and/or text
+            user = form.save()
+            disease = form.cleaned_data.get('disease')
 
+            # Save the disease in the UserProfile model
+            UserProfile.objects.create(user=user, disease=disease)
+
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            return redirect('login')  # Replace with your home page URL
+    else:
+        form = forms.RegisterForm()
+    
+    return render(request, 'appointment/register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('analyze_image')  # Replace with your home view name
+    else:
+        form = AuthenticationForm()
+    return render(request, 'appointment/login.html', {'form': form})
+
+
+@login_required
 def analyze_image(request):
     context = {}
 
@@ -118,7 +157,9 @@ def analyze_image(request):
             response = model.generate_content(prompt_parts)
             
             if response:
-                context['analysis'] = response.text
+                context['message'] = response.text
+                print(response.text)
+                return JsonResponse({'bot_response': response.text})
 
             # Clean up the temporary file
             os.remove(image_path)
@@ -134,6 +175,7 @@ def analyze_image(request):
 
             # Return JSON response for the bot's reply
             context['message'] = history
+            print(history)
             return JsonResponse({'bot_response': model_response, 'history': history})
         
         else:
@@ -141,3 +183,6 @@ def analyze_image(request):
             context['error'] = "Please provide an image or text input for analysis."
 
     return render(request, 'appointment/analyze_image.html', context)
+
+
+    
