@@ -166,6 +166,10 @@ for vital
 ![6e46ed7d-0c8a-4dfd-8010-a1392723291f](https://github.com/user-attachments/assets/6cef05ec-3f3f-4043-a7cc-695de9130b6d)
 
 for chatbot
+![image](https://github.com/user-attachments/assets/2eec5a12-1c41-4b46-975f-3311923cbfe8)
+![image](https://github.com/user-attachments/assets/74b9d350-e33a-4f02-b1f2-b62dcdfece02)
+![image](https://github.com/user-attachments/assets/0c94a940-6a0d-48b5-a537-601314c6969e)
+
 ![image](https://github.com/user-attachments/assets/45ad0e2e-d085-4e77-96ea-baf11e064ff5)
 ![image](https://github.com/user-attachments/assets/e0e5b391-af4a-4455-85a7-9e36798e42e7)
 ![image](https://github.com/user-attachments/assets/716095c3-f4d3-4e2f-bf68-3175605a38d3)
