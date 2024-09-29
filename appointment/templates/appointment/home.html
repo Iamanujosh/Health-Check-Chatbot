@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Homepage</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .navbar {
+            background-color: #007BFF;
+            padding: 10px;
+            text-align: center;
+        }
+        .navbar a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+        .login-register {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .login-register a {
+            display: inline-block;
+            margin: 10px 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .login-register a:hover {
+            background-color: #0056b3;
+        }
+        .features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .feature {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            width: calc(33% - 40px); /* Adjust width and margin for responsiveness */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+            position: relative; /* For positioning the image */
+        }
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+        .feature img {
+            width: 100%; /* Full width for responsive images */
+            border-radius: 8px 8px 0 0; /* Round top corners */
+        }
+        .feature h2 {
+            color: #007BFF;
+        }
+        .feature p {
+            color: #555;
+        }
+        .feature a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .feature a:hover {
+            background-color: #218838;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .feature {
+                width: calc(50% - 40px); /* Two features per row on medium screens */
+            }
+        }
+        @media (max-width: 480px) {
+            .feature {
+                width: 100%; /* Full width on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <h1>Welcome to Our Healthcare Application</h1>
+
+        <div class="login-register">
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <img src="https://imgs.search.brave.com/N7XSpinNhDsfXacc4o0jmacKAaYeaj00T7_TKcniN3g/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTQw/MTgxMTc2Ni92ZWN0/b3IvYS1jdXRlLXJv/dW5kLXJvYm90LXdl/YXJpbmctYS1zdGV0/aG9zY29wZS1uZXct/dGVjaG5vbG9naWVz/LWFuZC1saWZlc3R5/bGUuanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPUtjbm9KSGV6/RG9MU3JVTVhIcEFQ/NEtCanhNZDJYRUNV/SEcwaXJkTHlobUU9" alt="Personalized Healthcare">
+                <h2>Personalized Healthcare</h2>
+                <p>Get personalized health advice based on your medical history.</p>
+                <a href="{% url 'analyze_image' %}">Learn More</a>
+            </div>
+            <div class="feature">
+                <img src="https://imgs.search.brave.com/m3Rh2J5snIE93N1b0J0FrE7zMmtexsgNYfQxeqDp1TI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTQx/Mjc1ODUwOS9waG90/by9jYWxlbmRhci13/aXRoLWNsb2NrLWFu/ZC1ub3RpZmljYXRp/b24tYmVsbC5qcGc_/cz02MTJ4NjEyJnc9/MCZrPTIwJmM9dkhD/RVgxTW9XZzRXNVh6/d1lYWEd4ek9WRGJx/OUdBZmZvSDR1bGdL/LTRkQT0" alt="Appointment Scheduling">
+                <h2>Appointment Scheduling</h2>
+                <p>Easily schedule your appointments with healthcare providers.</p>
+                <a href="{% url 'book_appointment' doctor_id=1 %}">Book Now</a>  <!-- Replace with dynamic ID if needed -->
+            </div>
+            <div class="feature">
+                <img src="https://imgs.search.brave.com/TVxhlSf3PeIZbKJ5h4wK0CDPlEwE0lSpZxtxmMIAF3s/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90aHVt/YnMuZHJlYW1zdGlt/ZS5jb20vYi9kb2N0/b3ItbWVhc3VyZW1l/bnQtcHVsc2UtZG9j/dG9yLW1lYXN1cmVt/ZW50LXB1bHNlLWZp/bmdlci1oYW5kLXZl/aW4tcmVkLWhlYXJ0/LWNhcmRpb2dyYW0t/dmVjdG9yLWlsbHVz/dHJhdGlvbi1mbGF0/LTEwOTQ2NzM2Ni5q/cGc" alt="Vital Monitoring">
+                <h2>Vital Monitoring</h2>
+                <p>Track your vital signs and receive alerts for any abnormalities.</p>
+                <a href="{% url 'vital_analysis' %}">Start Monitoring</a>
+            </div>
+            <div class="feature">
+                <img src="https://imgs.search.brave.com/036cgv73jApL6Q6FXV8kTTGJ7errn-r4dOEZAhT51J0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/dmVjdG9yc3RvY2su/Y29tL2kvcHJldmll/dy0xeC8zOS82MC9j/YXJ0b29uLWx1bmdz/LWh1bWFuLXB1bG1v/bmFyeS1ib2R5LW9y/Z2FuLWNoYXJhY3Rl/ci12ZWN0b3ItNDU2/MTM5NjAuanBn" alt="Insights About Lung Cancer">
+                <h2>Insights About Lung Cancer</h2>
+                <p>Learn about lung cancer prevention and monitoring vital signs.</p>
+                <a href="{% url 'profile' %}">Start Monitoring</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

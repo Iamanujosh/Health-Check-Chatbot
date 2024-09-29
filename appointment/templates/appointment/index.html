@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vital Signs Prediction</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Predict Risk Category Based on Vital Signs</h1>
+    <form id="vital-signs-form">
+        <label for="heart_rate">Heart Rate (bpm):</label>
+        <input type="number" id="heart_rate" name="heart_rate" required><br>
+
+        <label for="respiratory_rate">Respiratory Rate (breaths/min):</label>
+        <input type="number" id="respiratory_rate" name="respiratory_rate" required><br>
+
+        <label for="body_temperature">Body Temperature (°C):</label>
+        <input type="number" id="body_temperature" name="body_temperature" step="0.1" required><br>
+
+        <label for="oxygen_saturation">Oxygen Saturation (%):</label>
+        <input type="number" id="oxygen_saturation" name="oxygen_saturation" required><br>
+
+        <label for="systolic_bp">Systolic BP (mmHg):</label>
+        <input type="number" id="systolic_bp" name="systolic_bp" required><br>
+
+        <label for="diastolic_bp">Diastolic BP (mmHg):</label>
+        <input type="number" id="diastolic_bp" name="diastolic_bp" required><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2 id="result"></h2>
+
+    <script>
+        $(document).ready(function() {
+            $('#vital-signs-form').on('submit', function(event) {
+                event.preventDefault();
+
+                $.ajax({
+                    url: '/predict/',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#result').text('Predicted Risk Category: ' + response.risk_category);
+                    },
+                    error: function() {
+                        $('#result').text('Error in prediction.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

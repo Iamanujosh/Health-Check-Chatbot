@@ -1,0 +1,98 @@
+<!-- templates/appointment/vital_analysis.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vital Analysis</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+        }
+        input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e7f3fe;
+            border: 1px solid #b3d7ff;
+            color: #31708f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Your Vital Signs</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <label for="heart_rate">Heart Rate (bpm):</label>
+            <input type="number" name="heart_rate" required><br>
+
+            <label for="respiratory_rate">Respiratory Rate (breaths/min):</label>
+            <input type="number" name="respiratory_rate" required><br>
+
+            <label for="body_temperature">Body Temperature (°C):</label>
+            <input type="number" step="0.1" name="body_temperature" required><br>
+
+            <label for="oxygen_saturation">Oxygen Saturation (%):</label>
+            <input type="number" name="oxygen_saturation" required><br>
+
+            <label for="systolic_blood_pressure">Systolic Blood Pressure (mmHg):</label>
+            <input type="number" name="systolic_blood_pressure" required><br>
+
+            <label for="diastolic_blood_pressure">Diastolic Blood Pressure (mmHg):</label>
+            <input type="number" name="diastolic_blood_pressure" required><br>
+
+            <input type="submit" value="Submit">
+        </form>
+
+        {% if result %}
+            <div class="result">
+                <h2>Predicted Risk Category: {{ result }}</h2>
+                <p>{{ issues_report }}</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

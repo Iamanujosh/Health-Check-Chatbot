@@ -20,13 +20,26 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from . import forms
-from .forms import RegisterForm
-from .models import UserProfile
+from .forms import RegisterForm,AppointmentForm
+from .models import UserProfile,Doctor,Appointment
+from django.urls import reverse
+import pandas as pd
+from .vital_analysis_model import predict_risk_with_ml, train_ml_model, generate_issues_report
+
+
 
 history = []
 # Example: Fetching user data from the database
 
 # Configure Gemini API
+# Example mapping
+symptom_doctor_mapping = {
+    "stomach hurting": "Dr. Smith",
+    "headache": "Dr. Johnson",
+    "fever": "Dr. Williams",
+    # Add more symptoms and corresponding doctors
+}
+
 google_api_key = 'AIzaSyAmb11uMRSOS9sAwFSqZbJaOqmFrDpsxTM'
 genai.configure(api_key=google_api_key)
 
@@ -57,6 +70,8 @@ Your key responsibilities:
 3. **Analysis Report**: Document all findings from both the image and text input in a structured format.
 4. **Recommendations**: Based on the analysis of both the image and text, suggest any remedies, tests, or treatments as applicable.
 5. **Treatments**: If applicable, lay out detailed treatments that can help in faster recovery.
+6. **Response format**: you have to include headings , breaks, paragraphs,and emojis for clean text.
+7.**Appointment**: if user mentions any disease then just tell him that i have find you this doctor.
 
 Important Notes to remember:
     1. Scope of response : Only respond if the image or input text pertains to 
@@ -69,11 +84,12 @@ Important Notes to remember:
     4. Your insights are invaluable in guiding clinical decisions. 
     Please proceed with the analysis, adhering to the 
     structured approach outlined above.
+    5.Response format: you have to include headings , breaks, paragraphs,and emojis for clean text.
     
-    Please provide the final response with these 4 headings : 
-    Detailed Analysis, Analysis Report, Recommendations and Treatments
+    
+    Please provide the final response with these 2 headings in bold:  Recommendations, in new paragraph and Treatments.
 
-Please provide the final response with these 4 headings: Detailed Analysis, Analysis Report, Recommendations, and Treatments.
+
 
 """
 
@@ -83,6 +99,8 @@ model = genai.GenerativeModel(
     safety_settings=safety_settings,
     system_instruction=system_prompt
 )
+def home(request):
+    return render(request, 'appointment/home.html')  # Ensure 'homepage.html' matches your HTML file's name
 @login_required
 def profile(request):
     # Access the logged-in user
@@ -157,14 +175,38 @@ def analyze_image(request):
             response = model.generate_content(prompt_parts)
             
             if response:
-                context['message'] = response.text
-                print(response.text)
-                return JsonResponse({'bot_response': response.text})
+                # Format the bot's response into structured HTML
+                formatted_response = f"""
+                    <h3>🤖 Bot Analysis:</h3>
+                    <p>{response.text}</p>
+                    <h4>🔍 Key Insights:</h4>
+                    <ul>
+                        <li>🔸 Point 1: {response.point_1 if hasattr(response, 'point_1') else 'N/A'}</li>
+                        <li>🔸 Point 2: {response.point_2 if hasattr(response, 'point_2') else 'N/A'}</li>
+                        <li>🔸 Point 3: {response.point_3 if hasattr(response, 'point_3') else 'N/A'}</li>
+                    </ul>
+                    <p>For further assistance, please upload more information or ask another question! 😊</p>
+                """
+                return JsonResponse({'bot_response': formatted_response})
 
             # Clean up the temporary file
             os.remove(image_path)
         elif user_input:
-            # If only text is provided, process the text input
+
+            rec_doc = analyze_user_input(user_input)
+            if rec_doc:
+                context['doctor_card'] = {
+                    'id': rec_doc.id,
+                    'name': rec_doc.name,
+                    'specialization': rec_doc.specialization,
+                    'contact': rec_doc.contact_number,
+                    "appointment_url": reverse('book_appointment', args=[rec_doc.id]),
+                     # Assuming there's an image field
+                }
+            else:
+                context['message'] = "No matching symptoms found. Please provide more details."
+    
+            
             chat_session = model.start_chat(history=history)
             response = chat_session.send_message(user_input)
             model_response = response.text
@@ -176,7 +218,13 @@ def analyze_image(request):
             # Return JSON response for the bot's reply
             context['message'] = history
             print(history)
-            return JsonResponse({'bot_response': model_response, 'history': history})
+            print("Doctor Card:", context.get('doctor_card'))  # Debug output
+
+            return JsonResponse({
+                'bot_response': model_response,
+                'doctor_card': context.get('doctor_card'),  # Doctor details if found
+                'history': history
+            })
         
         else:
             # If neither image nor text is provided, show an error message
@@ -185,4 +233,103 @@ def analyze_image(request):
     return render(request, 'appointment/analyze_image.html', context)
 
 
-    
+
+def analyze_user_input(user_input):
+    # Convert input to lowercase for easier comparison
+    input_lower = user_input.lower()
+
+    # List of symptoms
+    symptoms = [
+        "stomach pain",
+        "headache",
+        "fever",
+        "cough",
+        "chest pain",
+        "fatigue",
+        "shortness of breath",
+        "back pain",
+        "nausea",
+        "dizziness",
+        "joint pain",
+        "skin rash",
+        "cold",
+        "insomnia",
+        "anxiety",
+        "urinary problems",
+        "weight loss",
+        "vision changes",
+        "hearing loss",
+        "allergic reactions"
+    ]
+
+    # Loop through symptoms to find a match
+    for symptom in symptoms:
+        if symptom in input_lower:
+            # Find the recommended doctor based on the symptom
+            recommended_doctor = Doctor.objects.filter(specialization__icontains=symptom).first()
+            return recommended_doctor  # Return the matched doctor
+
+    return None  # No matching symptom found
+
+def book_appointment(request, doctor_id):
+    doctor = Doctor.objects.get(id=doctor_id)
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.user = request.user
+            appointment.doctor = doctor
+            appointment.save()
+            return redirect('analyze_image')  # Redirect to a success page or the doctor profile
+    else:
+        form = AppointmentForm()
+
+    return render(request, 'appointment/book_appointment.html', {'doctor': doctor, 'form': form})
+
+def booking_success(request, doctor_id):
+    # Assuming you have logic to get doctor and appointment details
+    dr = Doctor.objects.get(id=doctor_id)
+    appointment_date = dr.appointment_date  # Replace with actual appointment date
+    appointment_time =dr.appointment_time   # Replace with actual appointment time
+
+    context = {
+        'doctor': dr,
+        'appointment_date': appointment_date,
+        'appointment_time': appointment_time,
+    }
+
+    return render(request, 'booking_success.html', context)
+
+def vital_analysis(request):
+    result = None
+    issues_report = None
+
+    if request.method == 'POST':
+        heart_rate = int(request.POST['heart_rate'])
+        respiratory_rate = int(request.POST['respiratory_rate'])
+        body_temperature = float(request.POST['body_temperature'])
+        oxygen_saturation = int(request.POST['oxygen_saturation'])
+        systolic_blood_pressure = int(request.POST['systolic_blood_pressure'])
+        diastolic_blood_pressure = int(request.POST['diastolic_blood_pressure'])
+
+        # Load the trained model (ensure you train the model only once)
+        model = train_ml_model()  # Make sure this function checks if the model is already trained.
+
+        # Make the prediction
+        risk_category_num = predict_risk_with_ml(
+            model,
+            heart_rate,
+            respiratory_rate,
+            body_temperature,
+            oxygen_saturation,
+            systolic_blood_pressure,
+            diastolic_blood_pressure
+        )
+
+        # Determine risk category
+        result = "High Risk" if risk_category_num == 1 else "Low Risk"
+
+        # Generate a report based on the prediction
+        issues_report = generate_issues_report(result)
+
+    return render(request, 'appointment/vital_analysis.html', {'result': result, 'issues_report': issues_report})

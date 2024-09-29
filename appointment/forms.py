@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 import re
-from .models import UserProfile
+from .models import UserProfile,Appointment
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(widget=forms.EmailInput(attrs={
@@ -42,3 +42,8 @@ class RegisterForm(UserCreationForm):
         if not re.match(r'^[\w.@+-]+$', username):
             raise ValidationError("Username can only contain letters, digits and @/./+/-/_ characters.")
         return username
+
+class AppointmentForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ['appointment_date', 'reason']
