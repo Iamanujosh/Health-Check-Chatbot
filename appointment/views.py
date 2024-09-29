@@ -40,7 +40,7 @@ symptom_doctor_mapping = {
     # Add more symptoms and corresponding doctors
 }
 
-google_api_key = 'AIzaSyAmb11uMRSOS9sAwFSqZbJaOqmFrDpsxTM'
+google_api_key = api-key
 genai.configure(api_key=google_api_key)
 
 # Model configuration
