@@ -30,7 +30,19 @@ from django.utils.safestring import mark_safe
 
 history = []
 # Configure Gemini API
+<<<<<<< HEAD
 google_api_key = 'AIzaSyAmb11uMRSOS9sAwFSqZbJaOqmFrDpsxTM'
+=======
+# Example mapping
+symptom_doctor_mapping = {
+    "stomach hurting": "Dr. Smith",
+    "headache": "Dr. Johnson",
+    "fever": "Dr. Williams",
+    # Add more symptoms and corresponding doctors
+}
+
+google_api_key = api-key
+>>>>>>> 77fbf87c7047e4f3459349afee919b3d5107fca4
 genai.configure(api_key=google_api_key)
 
 # Model configuration
