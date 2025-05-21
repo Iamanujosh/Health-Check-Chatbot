@@ -25,21 +25,11 @@ from .models import UserProfile,Doctor,Appointment
 from django.urls import reverse
 import pandas as pd
 from .vital_analysis_model import predict_risk_with_ml, train_ml_model, generate_issues_report
-
+from django.utils.safestring import mark_safe
 
 
 history = []
-# Example: Fetching user data from the database
-
 # Configure Gemini API
-# Example mapping
-symptom_doctor_mapping = {
-    "stomach hurting": "Dr. Smith",
-    "headache": "Dr. Johnson",
-    "fever": "Dr. Williams",
-    # Add more symptoms and corresponding doctors
-}
-
 google_api_key = 'AIzaSyAmb11uMRSOS9sAwFSqZbJaOqmFrDpsxTM'
 genai.configure(api_key=google_api_key)
 
@@ -144,7 +134,7 @@ def login_view(request):
     return render(request, 'appointment/login.html', {'form': form})
 
 
-@login_required
+
 def analyze_image(request):
     context = {}
 
@@ -175,19 +165,9 @@ def analyze_image(request):
             response = model.generate_content(prompt_parts)
             
             if response:
-                # Format the bot's response into structured HTML
-                formatted_response = f"""
-                    <h3>🤖 Bot Analysis:</h3>
-                    <p>{response.text}</p>
-                    <h4>🔍 Key Insights:</h4>
-                    <ul>
-                        <li>🔸 Point 1: {response.point_1 if hasattr(response, 'point_1') else 'N/A'}</li>
-                        <li>🔸 Point 2: {response.point_2 if hasattr(response, 'point_2') else 'N/A'}</li>
-                        <li>🔸 Point 3: {response.point_3 if hasattr(response, 'point_3') else 'N/A'}</li>
-                    </ul>
-                    <p>For further assistance, please upload more information or ask another question! 😊</p>
-                """
-                return JsonResponse({'bot_response': formatted_response})
+                context['message'] = response.text
+                print(response.text)
+                return JsonResponse({'bot_response': response.text})
 
             # Clean up the temporary file
             os.remove(image_path)
@@ -209,14 +189,19 @@ def analyze_image(request):
             
             chat_session = model.start_chat(history=history)
             response = chat_session.send_message(user_input)
-            model_response = response.text
+            model_response = bold_asterisk_text(response.text)
+            example_message = "<b>Hello!</b> This message is <i>italicized</i>."
+           
 
             # Append user and bot messages to the history
             history.append({"role": "user", "parts": [user_input]})
             history.append({"role": "model", "parts": [model_response]})
-
+            
             # Return JSON response for the bot's reply
-            context['message'] = history
+            context = {
+            'message': history,
+            'example_message': mark_safe(example_message)  # Mark as safe for rendering
+        }
             print(history)
             print("Doctor Card:", context.get('doctor_card'))  # Debug output
 
@@ -333,3 +318,20 @@ def vital_analysis(request):
         issues_report = generate_issues_report(result)
 
     return render(request, 'appointment/vital_analysis.html', {'result': result, 'issues_report': issues_report})
+
+
+def bold_asterisk_text(sentence):
+    # Replace *word* with <strong>word</strong>
+   
+    sentence = sentence.replace('\n','<br>')
+    while '**' in sentence:
+        start = sentence.find('**')
+        end = sentence.find('**', start + 1)
+        
+        if start != -1 and end != -1:
+            # Replace the asterisks and make it bold
+            sentence = sentence[:start] + '<strong>' + sentence[start + 1:end] + '</strong>' + sentence[end + 1:]
+        else:
+            break
+            
+    return sentence

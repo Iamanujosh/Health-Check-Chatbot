@@ -291,7 +291,7 @@
     <div class="chat-container">
         <h1>Chat with Bot</h1>
         <div class="chat-messages" id="chatMessages">
-            <!-- Messages will be appended here dynamically -->
+            {{example_message | safe }}
         </div>
         <form class="chat-input" method="POST" id="chatForm" enctype="multipart/form-data">
             {% csrf_token %}
